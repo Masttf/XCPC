@@ -1,4 +1,4 @@
 #!/bin/bash
 git add .
-git commit -m '$DATA'
+git commit -m "$(date +'%Y-%m-%d')"
 git push origin master
