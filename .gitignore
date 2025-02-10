@@ -1,0 +1,5 @@
+*.exe
+*.zip
+*.in
+*.out
+*.cpp__tests
