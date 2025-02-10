@@ -1,0 +1,43 @@
+20
+62 11 23 3 39 40 16 12 12 39 90 41 95 20 44 52 45 91 97 33 
+20
+update 16 19 13
+check 19 19
+update 11 18 72
+check 5 18
+update 2 5 5
+check 8 18
+update 2 5 74
+check 7 9
+update 14 16 78
+check 11 15
+update 14 20 31
+check 8 11
+update 15 17 99
+check 12 17
+update 17 17 8
+check 3 12
+update 20 20 14
+check 5 6
+update 10 20 11
+check 15 16
+update 5 9 2
+check 10 17
+update 5 16 47
+check 8 10
+update 18 20 12
+check 18 20
+update 9 11 64
+check 15 15
+update 9 12 22
+check 1 20
+update 19 20 17
+check 2 12
+update 3 16 4
+check 15 16
+update 9 16 84
+check 6 19
+update 12 20 22
+check 16 20
+update 20 20 95
+check 11 12
