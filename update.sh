@@ -2,3 +2,7 @@
 git add .
 git commit -m "$(date +'%Y-%m-%d')"
 git push origin master
+if [ $? -ne 0]; then
+    git fetch origin
+    git rebase origin/master
+fi
