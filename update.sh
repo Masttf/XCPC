@@ -1,6 +1,5 @@
 #!/bin/bash
 git add .
-echo "$?"
 git commit -m "$(date +'%Y-%m-%d')"
 git push origin master
 if [ $? -ne 0]; then
