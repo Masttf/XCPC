@@ -2008,3 +2008,24 @@ struct ST{
 };
 ```
 
+### 组合数
+
+```c++
+constexpr int maxn = 1e5 + 5;
+mint f[maxn], inv[maxn];
+void init(){
+	f[0] = inv[0] = 1;
+	for(int i = 1; i < maxn; i++){
+		f[i] = f[i - 1] * i;
+	}
+	inv[maxn - 1] = f[maxn - 1].inv();
+	for(int i = maxn - 1; i >= 1; i--){
+		inv[i - 1] = inv[i] * i;
+	}
+}
+mint C(int n, int m){
+	if(n < 0 || m < 0 || n < m)return 0;
+	return f[n] * inv[m] * inv[n - m];
+}
+```
+
