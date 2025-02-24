@@ -17,7 +17,28 @@ void err(T arg, Ts ... args) {
     err(args...);
 }
 void solve(){
+    int tot = 0;
+    int mx = 1e7;
+    auto get = [&](int x) -> int{
+        return x * (x - 1) / 2 * 3;
+    };
+    vector<bool> vis(mx + 1);
+    for(int i = 0; i <= mx; i++){
+        int res = i + get(i);
+        if(res > mx)break;
+        vis[res] = true;
+    }
+    for(int j = 0; j <= mx; j++){
+        int d2 = 2 * j + get(j);
+        if(d2 > mx)break;
+        for(int k = 0; k <= mx; k++){
+            int d3 = 3 * k + get(k);
+            if(d3 + d2 > mx)break;
+            if(vis[mx - d3 - d2])tot++;
+        }
+    }
     
+    cout << tot << '\n';
     return ;
 }
 signed main(){
