@@ -7,6 +7,12 @@ cpp -dD -P -fpreprocessed | tr -d '[:space:]' | md5sum
 
 ```
 
+### 科学计数法
+
+```c++
+cout << setiosflags(ios::scientific) << setprecision(20);
+```
+
 ### 头文件
 
 ```c++
@@ -145,6 +151,7 @@ struct AC{
 	}
 };
 ```
+
 ### PAM
 
 ```c++
@@ -240,6 +247,11 @@ struct PAM{
             ans = max(ans, tr[x].len * f[x]);
         };
         dfs(dfs, 0);// fail只会连到偶根
+        // 倒序遍历就是拓扑序
+        // for(int i = tr.size() - 1; i >= 2; i--){
+        //     // dbg(i, tr[i].fail);
+        //     f[tr[i].fail] += f[i];
+        // }
         return ans;
     }
     /*
@@ -309,7 +321,7 @@ struct Manacher{
 ### 矩阵快速幂
 
 ```c++
-template <const int M, class T>
+template <class T, const int M>
 struct Matrix{
     T m[M][M];
     int row, col;
@@ -365,6 +377,15 @@ struct Matrix{
         }
         return res;
     }
+    friend ostream &operator<<(ostream &os, const Matrix &a) {
+		for(int i = 0; i < a.row; i++){
+			for(int j = 0; j < a.col; j++){
+				os << a.m[i][j] << ' ';
+			}
+			os << '\n';
+		}
+		return os;
+	}
 };
 using matrix = Matrix<$1>;
 ```
@@ -372,20 +393,80 @@ using matrix = Matrix<$1>;
 ### 广义矩阵(max + )
 
 ```c++
-Matrix operator * (const Matrix &y) const {
-    Matrix res(row, y.col);
-    for(int i = 0; i < row; i++){
-        for(int j = 0; j < y.col; j++){
-            for(int k = 0; k < col; k++){
-                res.m[i][j] = max(res.m[i][j], m[i][k] + y.m[k][j]);
+constexpr int inf = 1e9;
+template <class T, const int M>
+struct Matrix{
+    T m[M][M];
+    int row, col;
+    Matrix(){
+        row = 0;
+        col = 0;
+    }
+    Matrix(int n){ //单位矩阵
+        row = col = n;
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < n; j++){
+                if(i == j)m[i][j] = 0;
+                else m[i][j] = -inf;
             }
         }
     }
-    return res;
-}
+    Matrix(int r, int c){
+        row = r;
+        col = c;
+        for(int i = 0; i < row; i++){
+            for(int j = 0; j < col; j++){
+                m[i][j] = -inf;
+            }
+        }
+    }
+    Matrix(vector<vector<T>> a){
+        row = a.size();
+        col = a[0].size();
+        for(int i = 0; i < row; i++){
+            for(int j = 0; j < col; j++){
+                m[i][j] = a[i][j];
+            }
+        }
+    }
+    Matrix operator * (const Matrix &y) const {
+	    Matrix res(row, y.col);
+	    for(int i = 0; i < row; i++){
+	        for(int j = 0; j < y.col; j++){
+	            for(int k = 0; k < col; k++){
+	                res.m[i][j] = max(res.m[i][j], m[i][k] + y.m[k][j]);
+	            }
+	        }
+	    }
+	    return res;
+	}
+    Matrix qmi (long long b){
+        Matrix res(row);
+        Matrix a = *this;
+        while(b){
+            if(b & 1) res = res * a;
+            b >>= 1;
+            a = a * a;
+        }
+        return res;
+    }
+    friend ostream &operator<<(ostream &os, const Matrix &a) {
+		for(int i = 0; i < a.row; i++){
+			for(int j = 0; j < a.col; j++){
+				os << a.m[i][j] << ' ';
+			}
+			os << '\n';
+		}
+		return os;
+	}
+};
+using matrix = Matrix<>;
 ```
 
 ### 最大流
+
+- $O(n^2 m)$
+- 二分图 $O(m \sqrt n)$
 
 ```c++
 struct Max_Flow{
@@ -482,6 +563,9 @@ struct Max_Flow{
 
 ### 最小费用最大流
 
+- $O(nm+mlogmf)$
+- 原始对偶算法实现
+
 ```c++
 struct MCFGraph {
     //#define int long long
@@ -543,6 +627,89 @@ struct MCFGraph {
 };
 ```
 
+- O$(nmf)$
+- 基于dinic实现
+
+```c++
+struct MCFGraph{
+	//#define int long long
+	static constexpr int inf = 1e18;
+	struct Edge {
+        int v, c, f;
+        Edge(int v, int c, int f) : v(v), c(c), f(f) {}
+    };
+    int n;
+    vector<Edge> e;
+    vector<vector<int>> g;
+    vector<int> dis, cur, vis;
+	MCFGraph(int n){
+		this->n = n;
+		e.clear();
+        g.assign(n, {});
+        cur.assign(n, 0);
+        vis.assign(n, 0);
+	}
+	void add(int u, int v, int c, int f){
+		g[u].push_back(e.size());
+        e.emplace_back(v, c, f);
+        g[v].push_back(e.size());
+        e.emplace_back(u, 0, -f);
+	}
+	bool bfs(int s, int t){
+		dis.assign(n, inf);
+		queue<int> que;
+		dis[s] = 0;
+		vis[s] = 1;
+		que.push(s);
+		while(!que.empty()){
+			int u = que.front();
+			que.pop();
+			vis[u] = 0;
+			for(auto i : g[u]){
+				auto [v, c, f] = e[i];
+				if(c > 0 && dis[v] > dis[u] + f){
+					dis[v] = dis[u] + f;
+					if(!vis[v]){
+						vis[v] = 1;
+						que.push(v);
+					}
+				}
+			}
+		}
+		return dis[t] != inf;
+	}
+	int dfs(int u, int t, int flow){
+		if (u == t) return flow;
+		vis[u] = 1;
+		int used = 0;
+		for(int &i = cur[u]; i < (int)g[u].size(); i++){
+			int j = g[u][i];
+			auto [v, c, f] = e[j];
+			if(!vis[v] && c > 0 && dis[v] == dis[u] + f){
+				int k = dfs(v, t, min(flow - used, c));
+				used += k;
+				e[j].c -= k;
+				e[j ^ 1].c += k;
+				if(used == flow) break;
+			}
+		}
+		vis[u] = 0;
+		return used;
+	}
+	pair<int, int> flow(int s, int t){
+		int flow = 0;
+		int cost = 0;
+		while(bfs(s, t)){
+			cur.assign(n, 0);
+			int aug = dfs(s, t, inf);
+			flow += aug;
+			cost += dis[t] * aug;
+		}
+		return {flow, cost};
+	}
+};
+```
+
 ### 可撤销并查集
 
 ```c++
@@ -578,16 +745,19 @@ auto rollback = [&](int x) -> void{
 
 ### 自动取模类
 
+- 注意 /0 * 0，要计数处理
+
 ```c++
-template<const int mod>
+template<const int T>
 struct ModInt {
+	const static int mod = T;
 	int x;
-	ModInt(int x = 0) : x(x % mod) {}
-	ModInt(long long x) : x(int(x % mod)) {} 
+	ModInt(int x = 0) : x(x < 0 ? x % mod + mod : x % mod) {}
+	ModInt(long long x) : x(int(x < 0 ? x % mod + mod : x % mod)) {} 
 	int val() { return x; }
 	ModInt operator + (const ModInt &a) const { 
 		int x0 = x + a.x;
-		return ModInt(x0 < mod ? x0 : x0 - mod);
+		return ModInt(x0 < mod ? x0 : x0 - mod); 
 	}
 	ModInt operator - (const ModInt &a) const {
 		int x0 = x - a.x;
@@ -601,10 +771,10 @@ struct ModInt {
 	}
 	bool operator == (const ModInt &a) const {
 		return x == a.x;
-	};
+	}
 	bool operator != (const ModInt &a) const {
 		return x != a.x;
-	};
+	}
 	void operator += (const ModInt &a) {
 		x += a.x;
 		if (x >= mod) x -= mod;
@@ -663,54 +833,7 @@ struct ModInt {
 				
 };
 constexpr int mod = $1;
-using mint =ModInt<mod>;template<const int T>
-struct ModInt {
-	const static int mod = T;
-	int x;
-	ModInt(int x = 0) : x(x % mod) {}
-	ModInt(long long x) : x(int(x % mod)) {} 
-	int val() { return x; }
-	ModInt operator + (const ModInt &a) const { int x0 = x + a.x; return ModInt(x0 < mod ? x0 : x0 - mod); }
-	ModInt operator - (const ModInt &a) const { int x0 = x - a.x; return ModInt(x0 < 0 ? x0 + mod : x0); }
-	ModInt operator * (const ModInt &a) const { return ModInt(1LL * x * a.x % mod); }
-	ModInt operator / (const ModInt &a) const { return *this * a.inv(); }
-	bool operator == (const ModInt &a) const { return x == a.x; };
-	bool operator != (const ModInt &a) const { return x != a.x; };
-	void operator += (const ModInt &a) { x += a.x; if (x >= mod) x -= mod; }
-	void operator -= (const ModInt &a) { x -= a.x; if (x < 0) x += mod; }
-	void operator *= (const ModInt &a) { x = 1LL * x * a.x % mod; }			
-	void operator /= (const ModInt &a) { *this = *this / a; }
-	friend ModInt operator + (int y, const ModInt &a){ int x0 = y + a.x; return ModInt(x0 < mod ? x0 : x0 - mod); }
-	friend ModInt operator - (int y, const ModInt &a){ int x0 = y - a.x; return ModInt(x0 < 0 ? x0 + mod : x0); }			
-	friend ModInt operator * (int y, const ModInt &a){ return ModInt(1LL * y * a.x % mod);}
-	friend ModInt operator / (int y, const ModInt &a){ return ModInt(y) / a;}
-	friend ostream &operator<<(ostream &os, const ModInt &a) { return os << a.x;}
-	friend istream &operator>>(istream &is, ModInt &t){return is >> t.x;}						
-				
-	ModInt pow(long long n) const {
-	ModInt res(1), mul(x);
-		while(n){
-			if (n & 1) res *= mul;
-			mul *= mul;
-			n >>= 1;
-		}
-		return res;
-	}
-				
-	ModInt inv() const {
-		int a = x, b = mod, u = 1, v = 0;
-		while (b) {
-			int t = a / b;
-			a -= t * b; swap(a, b);
-			u -= t * v; swap(u, v);
-		}
-		if (u < 0) u += mod;
-		return u;
-	}
-				
-};
-constexpr int mod = $1;
-using mint =ModInt<mod>;
+using mint = ModInt<mod>;
 ```
 
 ### lca
@@ -1010,6 +1133,7 @@ struct trie{
 
 - 注意合并的时候考虑贡献要是未覆盖
 - 只要需要考虑根节点的合并即可
+- 复杂度证明，每次复杂度是重复节点个数，也是相当于删除重复节点，所以总复杂度$O(nlogn)$
 
 ```c++
 auto merge = [&](auto self, int l, int r, int x, int y) -> int{
@@ -1048,6 +1172,7 @@ auto merge = [&](auto self, int l, int r, int &x, int y) -> void{
     self(self, l, mid, tr[x].l, tr[y].l);
     self(self, mid + 1, r, tr[x].r, tr[y].r);
 };
+
 //拿到父亲那边的子树情况
 auto run = [&](auto self, int l, int r, int x, int y) -> void{
     if(tr[x].cnt - tr[y].cnt == 0)return ;
@@ -1155,6 +1280,26 @@ void solve(){
 	cout << dp[1] << '\n';
 	return ;
 }
+```
+
+### 线段树分裂
+
+- 一般与线段树合并一起使用，可以分裂出一个新的集合，然后合并回来
+
+```c++
+auto split = [&](auto self, int l, int r, int x, int y, int &u, int &v) -> void{
+    if(x <= l && r <= y){
+        v = u;
+        u = 0;
+        return ;
+    }
+    v = ++tot;
+    int mid = (l + r) >> 1;
+    if(x <= mid)self(self, l, mid, x, y, tr[u].lson, tr[v].lson);
+    if(y > mid)self(self, mid + 1, r, x, y, tr[u].rson, tr[v].rson);
+    up(u);
+    up(v);
+};
 ```
 
 
@@ -1703,6 +1848,7 @@ Info operator+(const Info &a, const Info &b){
 ### 莫队 
 
 - 注意保证区间非负
+- 要求操作O(1)， 因此可以使用分块牺牲查询时间
 
 ```c++
 int block = sqrt(n);
@@ -1782,6 +1928,107 @@ for(int i = 0, l, r; i < sz; i++){
 }
 ```
 
+### 回滚删除
+
+```c++
+#include<bits/stdc++.h>
+#define int long long
+using namespace std;
+#define dbg(x...) \
+do { \
+    cout << #x << " -> "; \
+    err(x); \
+} while (0)
+
+void err() {
+    cout<<endl<<endl;
+}
+ 
+template<class T, class... Ts>
+void err(T arg, Ts ... args) {
+    cout<<fixed<<setprecision(10)<<arg<< ' ';
+    err(args...);
+}
+struct node{
+	int l, r, id, blk;
+};
+void solve(){
+    int n, q; cin >> n >> q;
+    int N = 2e5 + 5;
+    vector<int> a(n + 1);
+    for(int i = 1; i <= n; i++)cin >> a[i];
+    vector<int> ans(q + 1);
+    vector<node> Q;
+    int mx = 0;
+    int block = sqrt(n);
+    vector<array<int, 2>> stk;
+    vector<int> cnt(N);
+    auto del = [&](int x, int tp) -> void{
+    	if(tp)stk.push_back({a[x], mx});
+    	cnt[a[x]]--;
+    	if(!cnt[a[x]]) mx = min(mx, a[x]);
+    };
+    auto rollback = [&]() -> void{
+    	while(stk.size()){
+    		auto [x, v] = stk.back();
+    		stk.pop_back();
+    		cnt[x]++;
+    		mx = v;
+    	}
+    };
+    for(int i = 1; i <= q; i++){
+    	int l, r; cin >> l >> r;
+    	if(l / block == r / block){
+    		mx = 0;
+    		for(int j = l; j <= r; j++){
+    			cnt[a[j]]++;
+    		}
+    		while(cnt[mx])mx++;
+    		ans[i] = mx;
+    		for(int j = l; j <= r; j++){
+    			cnt[a[j]]--;
+    		}
+    	}else Q.push_back({l, r, i, l / block});
+    }
+    sort(Q.begin(), Q.end(), [&](node x, node y) -> bool{
+    	if(x.blk != y.blk)return x.l < y.l;
+    	return x.r > y.r;
+    });
+    int sz = Q.size();
+    for(int i = 0, l, r; i < sz; i++){
+    	auto [ll, rr, id, blk] = Q[i];
+    	if(!i || blk != Q[i - 1].blk){
+    		l = max(1ll, blk * block);
+    		r = n;
+    		cnt.assign(n + 1, 0);
+    		mx = 0;
+    		for(int j = l; j <= r; j++){
+    			cnt[a[j]]++;
+    		}
+    		while(cnt[mx])mx++;
+    	}
+    	while(r > rr)del(r--, 0);
+    	while(l < ll)del(l++, 1);
+    	ans[id] = mx;
+    	rollback();
+    	l = max(1ll, blk * block);
+    }
+    for(int i = 1; i <= q; i++){
+    	cout << ans[i] << '\n';
+    }
+    return ;
+}
+signed main(){
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    int t=1;//cin>>t;
+    while(t--)solve();
+    return 0;
+}
+```
+
+
+
 ### bitset(遍历1的位置)
 
 ```c++
@@ -1789,6 +2036,8 @@ for(int j = r1._Find_first(); j <= n; j = r1._Find_next(j))
 ```
 
 ### 斯坦纳树(O($3^kn + 2^knlogm$))
+
+- 求包含k个点集的最小生成树
 
 ```c++
 constexpr int Max = 1e18;
@@ -1973,6 +2222,224 @@ auto tarjan = [&](auto self, int u) -> void{
     }
     return ;
 };
+```
+
+### 数论分块
+
+下取整
+
+```c++
+for(int i = 1, r; i <= n; i = r + 1){
+	r = n / (n / i);
+}
+```
+
+上取整
+
+```c++
+for(int i = 1; i <= n; ){
+    int t = (n + i - 1) / i;
+    if(t <= 1)break;
+    i = (n + t - 2) / (t - 1);
+}
+```
+
+![image-20241029231703772](F:\image\image-20241029231703772.png)
+
+### 分块
+
+```c++
+int B = sqrt(n);
+vector<int> tag(n / B + 1);
+vector<int> sum(n / B + 1);
+vector<int> a(n + 1);
+for(int i = 1; i <= n; i++) cin >> a[i];
+for(int i = 1; i <= n; i++){
+    sum[i / B] += a[i];
+}
+auto add = [&](int l, int r, int val) -> void{
+    if(l / B == r / B){
+        for(int i = l; i <= r; i++){
+            a[i] += val;
+            sum[i / B] += val;
+        }
+    }else{
+        for(int i = l / B + 1; i <= r / B - 1; i++){
+            tag[i] += val;
+            sum[i] += (min(n + 1, (i + 1) * B) - max(1ll, i * B)) * val;
+        }
+        for(int i = l; i < min(n + 1, (l / B + 1) * B); i++){
+            a[i] += val;
+            sum[i / B] += val;
+        }
+        for(int i = max(1ll, r / B * B); i <= r; i++){
+            a[i] += val;
+            sum[i / B] += val;
+        }
+    }
+};
+auto ask = [&](int l, int r) -> int{
+    int res = 0;
+    if(l / B == r / B){
+        for(int i = l; i <= r; i++){
+            res += a[i] + tag[i / B];
+        }
+    }else{
+        for(int i = l / B + 1; i <= r / B - 1; i++){
+            res += sum[i];
+        }
+        for(int i = l; i < min(n + 1, (l / B + 1) * B); i++){
+            res += a[i] + tag[i / B];
+        }
+        for(int i = max(1ll, r / B * B); i <= r; i++){
+            res += a[i] + tag[i / B];
+        }
+    }
+    return res;
+};
+```
+
+### 虚树
+
+```c++
+struct VirtualTree{
+	static constexpr int k = 20;
+	int n;
+	vector<int> dep, dfn, val, cnt;
+	vector<vector<int>> g;
+	vector<vector<pair<int, int>>> st;
+	VirtualTree(vector<vector<int>> &t){
+		n = t.size() - 1;
+		dfn.assign(n + 1, 0);
+		val.assign(n + 1, 0);
+		cnt.assign(n + 1, 0);
+		dep.assign(n + 1, 0);
+		g.assign(n + 1, {});
+		st.assign(k + 1, vector<pair<int, int>>(n + 1));
+		int tot = 0;
+		auto dfs = [&](auto self, int now, int father) -> void{
+			dfn[now] = ++tot;
+			dep[now] = dep[father] + 1;
+			st[0][tot] = {dep[now], father};
+			for(auto v : t[now]){
+				if(v == father)continue;
+				self(self, v, now);
+			}
+		};
+		dfs(dfs, 1, 0);
+		for(int k = 1; k <= 20; k++){
+			for(int i = 1; i + (1ll << k) <= n + 1; i++){
+				st[k][i] = min(st[k - 1][i], st[k - 1][i + (1ll << (k - 1))]);
+			}
+		}
+	}
+	int lca(int a, int b){
+		if(a == b)return a;
+		if(dfn[a] > dfn[b])swap(a, b);
+		int l = dfn[a] + 1;
+		int r = dfn[b];
+		int len = (r - l + 1);
+		int d = __lg(len);
+		return min(st[d][l], st[d][r - (1ll << d) + 1]).second;
+	}
+    int build(vector<int> &c){
+      auto v = c;
+      sort(v.begin(), v.end(), [&](int x, int y) -> bool{
+        return dfn[x] < dfn[y];
+      });
+      int sz = v.size();
+      for(int i = 1; i < sz; i++){
+      	v.push_back(lca(v[i-1], v[i]));
+      }
+      sort(v.begin(), v.end(), [&](int x, int y) -> bool{
+        return dfn[x] < dfn[y];
+      });
+      v.erase(unique(v.begin(), v.end()), v.end());
+      sz = v.size();
+      // 建立虚树
+      for(int i = 1; i < sz; i++){
+      	g[lca(v[i-1], v[i])].push_back(v[i]);
+      }
+      // 跑贡献
+      int ans = 0;
+      for(auto x : c)cnt[x] = 1;
+      auto dfs = [&](auto self, int now) -> void{
+        for(auto x : g[now]){
+        	self(self, x);
+        	val[x] += cnt[x] * (dep[x] - dep[now]);
+        	ans += val[now] * cnt[x] + val[x] * cnt[now];
+        	val[now] += val[x];
+        	cnt[now] += cnt[x];
+        }
+      };
+      dfs(dfs, v[0]);
+      // 记得清空
+      for(auto x : v){
+      	vector<int>().swap(g[x]);
+      	val[x] = 0;
+      	cnt[x] = 0;
+      }
+      return ans;
+    }
+};
+```
+
+### 树状数组
+
+```c++
+template<class Info>
+struct Fenwick{
+	// #define lowbit(x) ((x) & (-x))
+	vector<Info> tr;
+	int n;
+	Fenwick(int n_) : n(n_), tr(n_ + 1){}
+	void add(int x, Info val){
+		while(x <= n){
+			tr[x] = tr[x] + val;
+			x += lowbit(x);
+		}
+	}
+	Info ask(int x){
+		Info res = Info();
+		while(x > 0){
+			res = res + tr[x];
+			x -= lowbit(x);
+		}
+		return res;
+	}
+	Info rangeAsk(int l, int r){
+		return ask(r) - ask(l - 1);
+	}
+	template<class F>
+	int find(F &&check){
+		int p = 0;
+		Info res = Info();
+		int d = __lg(n);
+		for(int i = d; i >= 0; i--){
+			int v = p + (1ll << i);
+			if(v <= n && check(res + tr[v])){
+				p = v;
+				res = res + tr[p];
+			}
+		}
+		return p;
+	}
+};
+struct Info{
+	int sum = 0, cnt = 0;
+};
+Info operator+ (const Info &a, const Info &b){
+	Info res = Info();
+	res.sum = a.sum + b.sum;
+	res.cnt = a.cnt + b.cnt;
+	return res;
+}
+Info operator- (const Info &a, const Info &b){
+	Info res = Info();
+	res.sum = a.sum - b.sum;
+	res.cnt = a.cnt - b.cnt;
+	return res;
+}
 ```
 
 ### ST表
