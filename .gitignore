@@ -3,3 +3,7 @@
 *.in
 *.out
 *.cpp__tests
+.cph
+.DS_Store
+.vscode
+*.bin
