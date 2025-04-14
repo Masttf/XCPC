@@ -1,0 +1,40 @@
+<snippet>
+    <description>lca</description>
+    <!-- 这里的内容是补全内容的预览 -->
+    <content><![CDATA[
+vector<int> dep(n + 1);
+vector<vector<int>> f(25, vector<int>(n + 1));
+auto dfs = [&](auto self, int now, int father) -> void{
+    dep[now] = dep[father]+1;
+    f[0][now] = father;
+    for(int i = 1; i <= 20; i++){
+        f[i][now] = f[i - 1][f[i - 1][now]];
+    }
+    for(auto v : g[now]){
+        if(v == father)continue;
+        self(self, v, now);
+    }
+    return ;
+};
+dfs(dfs, 1, 0);
+
+auto lca = [&](int a, int b) -> int{
+    if(dep[a] < dep[b])swap(a,b);
+    for(int i = 20; i >= 0; i--){
+        if(dep[a] - (1ll << i) >= dep[b])a = f[i][a];
+    }
+    if(a == b)return a;
+    for(int i = 20; i >= 0; i--){
+        if(f[i][a] != f[i][b]){
+            a = f[i][a];
+            b = f[i][b];
+        }
+    }
+    return f[0][a];
+};
+]]></content>
+    <tabTrigger>lca</tabTrigger>
+    <!-- 这里的内容是补全的触发文本 -->
+    <scope>source.c++</scope>
+    <!-- 这里的内容是补全适用语言 -->
+</snippet>

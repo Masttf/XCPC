@@ -1,0 +1,63 @@
+<snippet>
+    <description>Fenwick</description>
+    <!-- 这里的内容是补全内容的预览 -->
+    <content><![CDATA[
+template<class Info>
+struct Fenwick{
+    // #define lowbit(x) ((x) & (-x))
+    vector<Info> tr;
+    int n;
+    Fenwick(int n_) : n(n_), tr(n_ + 1){}
+    void add(int x, Info val){
+        while(x <= n){
+            tr[x] = tr[x] + val;
+            x += lowbit(x);
+        }
+    }
+    Info ask(int x){
+        Info res = Info();
+        while(x > 0){
+            res = res + tr[x];
+            x -= lowbit(x);
+        }
+        return res;
+    }
+    Info rangeAsk(int l, int r){
+        return ask(r) - ask(l - 1);
+    }
+    template<class F>
+    int find(F &&check){
+        int p = 0;
+        Info res = Info();
+        int d = __lg(n);
+        for(int i = d; i >= 0; i--){
+            int v = p + (1ll << i);
+            if(v <= n && check(res + tr[v])){
+                p = v;
+                res = res + tr[p];
+            }
+        }
+        return p;
+    }
+};
+struct Info{
+    int sum = 0, cnt = 0;
+};
+Info operator+ (const Info &a, const Info &b){
+    Info res = Info();
+    res.sum = a.sum + b.sum;
+    res.cnt = a.cnt + b.cnt;
+    return res;
+}
+Info operator- (const Info &a, const Info &b){
+    Info res = Info();
+    res.sum = a.sum - b.sum;
+    res.cnt = a.cnt - b.cnt;
+    return res;
+}
+]]></content>
+    <tabTrigger>Fenwick</tabTrigger>
+    <!-- 这里的内容是补全的触发文本 -->
+    <scope>source.c++</scope>
+    <!-- 这里的内容是补全适用语言 -->
+</snippet>

@@ -1,0 +1,38 @@
+<snippet>
+    <description>ST</description>
+    <!-- 这里的内容是补全内容的预览 -->
+    <content><![CDATA[
+template<class T, 
+    class Cmp = std::less<T>>
+struct ST{
+    int n, k;
+    const Cmp cmp = Cmp();
+    vector<vector<T>> st;
+    ST(){}
+    ST(const vector<T> &a){
+        init(a);
+    }
+    void init(const vector<T> &a){
+        n = a.size() - 1;
+        k = __lg(n);
+        st.resize(k + 1, vector<T>(n + 1));
+        for(int i = 1; i <= n; i++){
+            st[0][i] = a[i];
+        }
+        for(int s = 1; s <= k; s++){
+            for(int i = 1; i + (1 << s) <= n + 1; i++){
+                st[s][i] = min(st[s - 1][i], st[s - 1][i + (1 << (s - 1))], cmp);
+            }
+        }
+    }
+    T get(int l, int r){
+        int d = __lg(r - l + 1);
+        return min(st[d][l], st[d][r - (1 << d) + 1], cmp);
+    }
+};
+]]></content>
+    <tabTrigger>ST</tabTrigger>
+    <!-- 这里的内容是补全的触发文本 -->
+    <scope>source.c++</scope>
+    <!-- 这里的内容是补全适用语言 -->
+</snippet>
