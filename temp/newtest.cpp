@@ -10,7 +10,7 @@ do { \
 void err() {
     cout << endl << endl;
 }
- 
+
 template<class T, class... Ts>
 void err(T arg, Ts ... args) {
     cout << fixed << setprecision(10) << arg << ' ';

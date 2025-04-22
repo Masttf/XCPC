@@ -1,20 +1,29 @@
 {
     "configurations": [
+        
         {
-            "name": "Win32",
+            "name": "Competitive Programming (g++-14)",
             "includePath": [
                 "${workspaceFolder}/**"
             ],
             "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE"
+                "LOCAL"
             ],
-            "windowsSdkVersion": "10.0.22621.0",
-            "compilerPath": "cl.exe",
+            "compilerPath": "/opt/homebrew/bin/g++-14",
             "cStandard": "c17",
             "cppStandard": "c++20",
-            "intelliSenseMode": "windows-msvc-x64"
+            "intelliSenseMode": "gcc-x64",
+            "compilerArgs": [
+                "-O2",
+                "-Wall",
+                "-Wextra",
+                "-fsanitize=address,undefined",
+                "-D_GLIBCXX_DEBUG",
+                "-D_GLIBCXX_ASSERTIONS",
+                "-D_FORTIFY_SOURCE=2",
+                "-std=c++20",
+                "-g"
+            ]
         }
     ],
     "version": 4
