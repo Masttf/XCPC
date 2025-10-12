@@ -8,3 +8,5 @@
 .vscode
 *.bin
 temp/*
+ft/*
+xhs/*
